@@ -26,7 +26,7 @@ describe("User Management", () => {
      * NEVER
      * NEVER
      * NEVER store plaintext passwords, PLEASE
-     */
+     */  
     const actual = await UsersDAO.addUser(testUser)
     expect(actual.success).toBeTruthy()
     expect(actual.error).toBeUndefined()

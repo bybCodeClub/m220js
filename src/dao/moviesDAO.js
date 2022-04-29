@@ -199,7 +199,7 @@ export default class MoviesDAO {
       sortStage,
       skipStage,
       limitStage,
-      facetStage
+      facetStage,
       // TODO Ticket: Faceted Search
       // Add the stages to queryPipeline in the correct order.
     ]
