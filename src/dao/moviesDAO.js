@@ -28,10 +28,10 @@ export default class MoviesDAO {
   static async getConfiguration() {
     const roleInfo = await mflix.command({ connectionStatus: 1 })
     const authInfo = roleInfo.authInfo.authenticatedUserRoles[0]
-    const { poolSize, wtimeout } = movies.s.db.serverConfig.s.options
+    const { poolSize, writeConcern } = movies.s.db.serverConfig.s.options
     let response = {
       poolSize,
-      wtimeout,
+      wtimeout: writeConcern.wtimeout,
       authInfo,
     }
     return response
@@ -44,23 +44,8 @@ export default class MoviesDAO {
    * @returns {Promise<CountryResult>} A promise that will resolve to a list of CountryResults.
    */
   static async getMoviesByCountry(countries) {
-    /**
-    Ticket: Projection
-
-    Write a query that matches movies with the countries in the "countries"
-    list, but only returns the title and _id of each movie.
-
-    Remember that in MongoDB, the $in operator can be used with a list to
-    match one or more values of a specific field.
-    */
-
     let cursor
     try {
-      // TODO Ticket: Projection
-      // Find movies matching the "countries" list, but only return the title
-      // and _id. Do not put a limit in your own implementation, the limit
-      // here is only included to avoid sending 46000 documents down the
-      // wire.
       cursor = await movies.find(
         { countries: { $in: countries } },
         { projection: { title: 1 } },
@@ -108,17 +93,7 @@ export default class MoviesDAO {
    * @returns {QueryParams} The QueryParams for genre search
    */
   static genreSearchQuery(genre) {
-    /**
-    Ticket: Text and Subfield Search
-
-    Given an array of one or more genres, construct a query that searches
-    MongoDB for movies with that genre.
-    */
-
     const searchGenre = Array.isArray(genre) ? genre : genre.split(", ")
-
-    // TODO Ticket: Text and Subfield Search
-    // Construct a query that will search for the chosen genre.
     const query = { genres: { $in: searchGenre } }
     const project = {}
     const sort = DEFAULT_SORT
@@ -183,17 +158,6 @@ export default class MoviesDAO {
       },
     }
 
-    /**
-    Ticket: Faceted Search
-
-    Please append the skipStage, limitStage, and facetStage to the queryPipeline
-    (in that order). You can accomplish this by adding the stages directly to
-    the queryPipeline.
-
-    The queryPipeline is a Javascript array, so you can use push() or concat()
-    to complete this task, but you might have to do something about `const`.
-    */
-
     const queryPipeline = [
       matchStage,
       sortStage,
@@ -254,18 +218,6 @@ export default class MoviesDAO {
       return { moviesList: [], totalNumMovies: 0 }
     }
 
-    /**
-    Ticket: Paging
-
-    Before this method returns back to the API, use the "moviesPerPage" and
-    "page" arguments to decide the movies to display.
-
-    Paging can be implemented by using the skip() and limit() cursor methods.
-    */
-
-    // TODO Ticket: Paging
-    // Use the cursor to only return the movies that belong on the current page
-
     const displayCursor = cursor.skip(page * moviesPerPage).limit(moviesPerPage)
 
     try {
@@ -309,15 +261,10 @@ export default class MoviesDAO {
       ]
       return await movies.aggregate(pipeline).next()
     } catch (e) {
-      /**
-      Ticket: Error Handling
 
-      Handle the error that occurs when an invalid ID is passed to this method.
-      When this specific error is thrown, the method should return `null`.
-      */
-
-      // TODO Ticket: Error Handling
-      // Catch the InvalidId error by string matching, and then handle it.
+      if(e.toString().includes("Error:") )
+        return null
+      
       console.error(`Something went wrong in getMovieByID: ${e}`)
       throw e
     }
